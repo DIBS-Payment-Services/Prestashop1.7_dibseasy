@@ -34,6 +34,11 @@ class Consumer
     private $privatePerson;
 
     /**
+     * @var Company
+     */
+    private $company;
+
+    /**
      * @return Address
      */
     public function getBillingAddress()
@@ -79,5 +84,21 @@ class Consumer
     public function setPrivatePerson(Person $privatePerson)
     {
         $this->privatePerson = $privatePerson;
+    }
+
+    /**
+     * @return Company
+     */
+    public function getCompany()
+    {
+        return $this->company;
+    }
+
+    /**
+     * @param Company $company
+     */
+    public function setCompany(Company $company)
+    {
+        $this->company = $company;
     }
 }

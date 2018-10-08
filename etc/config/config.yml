@@ -28,6 +28,7 @@ parameters:
             DIBS_SWEEDEN_ADDRESS_ID: ~
             DIBS_NORWAY_ADDRESS_ID: ~
             DIBS_DENMARK_ADDRESS_ID: ~
+            DIBS_CONSUMER_TYPE: 'B2C'
 
         order_states:
             - { name: 'Payment accepted in DIBS Easy', color: '#0094cf', paid: 1, invoice: 1, config: 'DIBS_ACCEPTED_ORDER_STATE_ID'}

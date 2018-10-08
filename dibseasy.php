@@ -37,7 +37,7 @@ class DibsEasy extends PaymentModule
         $this->name = 'dibseasy';
         $this->author = 'Invertus';
         $this->tab = 'payments_gateways';
-        $this->version = '1.0.8';
+        $this->version = '1.1.0';
         $this->controllers = ['validation', 'checkout'];
         $this->compatibility = ['min' => '1.7.1.0', 'max' => _PS_VERSION_];
         $this->module_key = '7aa447652d62fa94766ded6234e74266';
@@ -155,7 +155,7 @@ class DibsEasy extends PaymentModule
      */
     public function hookPaymentOptions()
     {
-        if (!$this->isConfigured() || !$this->active) {
+        if (!$this->isConfigured() || !$this->active || !$this->checkCurrency($this->context->cart)) {
             return [];
         }
 
@@ -349,6 +349,15 @@ class DibsEasy extends PaymentModule
 
         $shippingAddress = $payment->getConsumer()->getShippingAddress();
         $person = $payment->getConsumer()->getPrivatePerson();
+        $company = $payment->getConsumer()->getCompany();
+
+        $firstName = $person->getFirstName() ?: $company->getFirstName();
+        $lastName = $person->getLastName() ?: $company->getLastName();
+        if ($person->getPhoneNumber()->getPrefix()) {
+            $phone = $person->getPhoneNumber()->getPrefix().$person->getPhoneNumber()->getNumber();
+        } else {
+            $phone = $company->getPhoneNumber()->getPrefix().$company->getPhoneNumber()->getNumber();
+        }
 
         /** @var \Invertus\DibsEasy\Service\CountryMapper $countryMapper */
         $countryMapper = $this->get('dibs.service.country_mapper');
@@ -361,9 +370,9 @@ class DibsEasy extends PaymentModule
         $deliveryAddress->postcode = $shippingAddress->getPostalCode();
         $deliveryAddress->city = $shippingAddress->getCity();
         $deliveryAddress->id_country = Country::getByIso($countryIso);
-        $deliveryAddress->firstname = $person->getFirstName();
-        $deliveryAddress->lastname = $person->getLastName();
-        $deliveryAddress->phone = $person->getPhoneNumber()->getPrefix().$person->getPhoneNumber()->getNumber();
+        $deliveryAddress->firstname = $firstName;
+        $deliveryAddress->lastname = $lastName;
+        $deliveryAddress->phone = $phone;
         $deliveryAddress->id_customer = $this->context->cart->id_customer;
 
         $deliveryAddressChecksum = $addressChecksumUtil->generateChecksum($deliveryAddress);

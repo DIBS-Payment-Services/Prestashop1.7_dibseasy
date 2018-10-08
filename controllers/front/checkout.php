@@ -166,6 +166,11 @@ class DibsEasyCheckoutModuleFrontController extends ModuleFrontController
             $paymentCreateAction = $this->module->get('dibs.action.payment_create');
             $orderPayment = $paymentCreateAction->createPayment($this->context->cart);
 
+            if (false === $orderPayment) {
+                $this->errors[] = $this->module->l('Failed to create payment in DIBS Easy. Please contact us for support.', 'checkout');
+                $this->redirectWithNotifications('order');
+            }
+
             $paymentId = $orderPayment->id_payment;
         }
 

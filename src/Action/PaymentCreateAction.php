@@ -23,6 +23,7 @@ use Invertus\DibsEasy\Adapter\ConfigurationAdapter;
 use Invertus\DibsEasy\Adapter\LinkAdapter;
 use Invertus\DibsEasy\Payment\PaymentCreateRequest;
 use Invertus\DibsEasy\Service\PaymentService;
+use Invertus\DibsEasy\ValueObject\Consumer;
 use Module;
 
 /**
@@ -98,6 +99,8 @@ class PaymentCreateAction extends AbstractAction
         $request->setUrl($this->linkAdapter->getModuleLink('dibseasy', 'checkout'));
         $request->setTermsUrl($this->configuration->get('DIBS_TAC_URL'));
 
+        $this->addConsumerData($request);
+
         $items = $this->getCartProductItems($cart);
         $request->setItems($items);
 
@@ -117,6 +120,39 @@ class PaymentCreateAction extends AbstractAction
         $orderPayment->save();
 
         return $orderPayment;
+    }
+
+    /**
+     * Adds consumer data to request
+     *
+     * @param PaymentCreateRequest $request
+     */
+    protected function addConsumerData(PaymentCreateRequest $request)
+    {
+        $consumerType = $this->configuration->get('DIBS_CONSUMER_TYPE');
+
+        switch ($consumerType) {
+            case Consumer::b2bAndB2cWithDefaultB2bType():
+                $supportedType = [Consumer::TYPE_B2B, Consumer::TYPE_B2C];
+                $defaultType = Consumer::TYPE_B2B;
+                break;
+            case Consumer::b2cAndB2bWithDefaultB2cType():
+                $supportedType = [Consumer::TYPE_B2C, Consumer::TYPE_B2B];
+                $defaultType = Consumer::TYPE_B2C;
+                break;
+            case Consumer::TYPE_B2B:
+                $supportedType = [Consumer::TYPE_B2B];
+                $defaultType = Consumer::TYPE_B2B;
+                break;
+            default:
+            case Consumer::TYPE_B2C:
+                $supportedType = [Consumer::TYPE_B2C];
+                $defaultType = Consumer::TYPE_B2C;
+                break;
+        }
+
+        $request->setSupportedConsumerTypes($supportedType);
+        $request->setDefaultConsumerType($defaultType);
     }
 
     /**

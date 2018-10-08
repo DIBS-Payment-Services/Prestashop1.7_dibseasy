@@ -28,6 +28,7 @@ use Invertus\DibsEasy\Payment\PaymentRefundRequest;
 use Invertus\DibsEasy\Repository\OrderPaymentRepository;
 use Invertus\DibsEasy\Result\Address;
 use Invertus\DibsEasy\Result\CardDetails;
+use Invertus\DibsEasy\Result\Company;
 use Invertus\DibsEasy\Result\Consumer;
 use Invertus\DibsEasy\Result\InvoiceDetails;
 use Invertus\DibsEasy\Result\OrderDetail;
@@ -286,6 +287,42 @@ class PaymentService
         );
         $person->setPhoneNumber($personPhoneNumber);
 
+        $company = new Company();
+        $company->setName(
+            isset($paymentArray['consumer']['company']['name']) ?
+                $paymentArray['consumer']['company']['name'] :
+                null
+        );
+        $company->setFirstName(
+            isset($paymentArray['consumer']['company']['contactDetails']['firstName']) ?
+                $paymentArray['consumer']['company']['contactDetails']['firstName'] :
+                null
+        );
+        $company->setLastName(
+            isset($paymentArray['consumer']['company']['contactDetails']['lastName']) ?
+                $paymentArray['consumer']['company']['contactDetails']['lastName'] :
+                null
+        );
+        $company->setEmail(
+            isset($paymentArray['consumer']['company']['contactDetails']['email']) ?
+                $paymentArray['consumer']['company']['contactDetails']['email'] :
+                null
+        );
+
+        $companyPhoneNumber = new PhoneNumber();
+        $companyPhoneNumber->setPrefix(
+            isset($paymentArray['consumer']['company']['contactDetails']['phoneNumber']['prefix']) ?
+                $paymentArray['consumer']['company']['contactDetails']['phoneNumber']['prefix'] :
+                null
+        );
+        $companyPhoneNumber->setNumber(
+            isset($paymentArray['consumer']['company']['contactDetails']['phoneNumber']['number']) ?
+                $paymentArray['consumer']['company']['contactDetails']['phoneNumber']['number'] :
+                null
+        );
+
+        $company->setPhoneNumber($companyPhoneNumber);
+
         $orderDetail = new OrderDetail();
         $orderDetail->setAmount(
             isset($paymentArray['orderDetails']['amount']) ?
@@ -355,6 +392,7 @@ class PaymentService
         $consumer->setBillingAddress($billingAddress);
         $consumer->setShippingAddress($shippingAddress);
         $consumer->setPrivatePerson($person);
+        $consumer->setCompany($company);
 
         $payment = new Payment();
         $payment->setPaymentId($paymentArray['paymentId']);

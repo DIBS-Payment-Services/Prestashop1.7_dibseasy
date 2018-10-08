@@ -59,6 +59,16 @@ class PaymentCreateRequest
     private $shippingCountries = [];
 
     /**
+     * @var array List of supported consumer types, availabe values are: B2B, B2C
+     */
+    private $supportedConsumerTypes = [];
+
+    /**
+     * @var string Default consumer type
+     */
+    private $defaultConsumerType;
+
+    /**
      * @param string $country 3-letter country code
      */
     public function addShippingCountry($country)
@@ -182,6 +192,38 @@ class PaymentCreateRequest
     /**
      * @return array
      */
+    public function getSupportedConsumerTypes()
+    {
+        return $this->supportedConsumerTypes;
+    }
+
+    /**
+     * @param array $supportedConsumerTypes
+     */
+    public function setSupportedConsumerTypes($supportedConsumerTypes)
+    {
+        $this->supportedConsumerTypes = $supportedConsumerTypes;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDefaultConsumerType()
+    {
+        return $this->defaultConsumerType;
+    }
+
+    /**
+     * @param string $defaultConsumerType
+     */
+    public function setDefaultConsumerType($defaultConsumerType)
+    {
+        $this->defaultConsumerType = $defaultConsumerType;
+    }
+
+    /**
+     * @return array
+     */
     public function toArray()
     {
         $orderArray = [
@@ -196,6 +238,10 @@ class PaymentCreateRequest
             'checkout' => [
                 'url' => $this->getUrl(),
                 'termsUrl' => $this->getTermsUrl(),
+                'consumerType' => [
+                    'supportedTypes' => $this->getSupportedConsumerTypes(),
+                    'default' => $this->getDefaultConsumerType(),
+                ],
             ],
         ];
 

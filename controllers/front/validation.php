@@ -207,23 +207,28 @@ class DibsEasyValidationModuleFrontController extends ModuleFrontController
         }
 
         $person = $payment->getConsumer()->getPrivatePerson();
+        $company = $payment->getConsumer()->getCompany();
 
-        $idCustomer = Customer::customerExists($person->getEmail(), true, false);
+        $firstName = $person->getFirstName() ?: $company->getFirstName();
+        $lastName = $person->getLastName() ?: $company->getLastName();
+        $email = $person->getEmail() ?: $company->getEmail();
+
+        $idCustomer = Customer::customerExists($email, true, false);
         if ($idCustomer) {
             $errorMessage = $this->module->l(
                 'Payment was canceled, because customer with email %s was found, please sign in.',
                 self::FILENAME
             );
-            $this->errors[] = sprintf($errorMessage, $payment->getConsumer()->getPrivatePerson()->getEmail());
+            $this->errors[] = sprintf($errorMessage, $email);
             return false;
         }
 
         $newPassword = Tools::passwdGen();
 
         $customer = new Customer();
-        $customer->firstname = $person->getFirstName();
-        $customer->lastname = $person->getLastName();
-        $customer->email = $person->getEmail();
+        $customer->firstname = $firstName;
+        $customer->lastname = $lastName;
+        $customer->email = $email;
         $customer->passwd = Tools::hash($newPassword);
         $customer->is_guest = 0;
         $customer->id_default_group = Configuration::get('PS_CUSTOMER_GROUP', null, $this->context->cart->id_shop);
