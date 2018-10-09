@@ -125,56 +125,9 @@ class DibsEasyCheckoutModuleFrontController extends ModuleFrontController
             $this->context->cart->update();
         }
 
-        /** @var \Invertus\DibsEasy\Repository\OrderPaymentRepository $orderPaymentRepository */
-        $orderPaymentRepository = $this->module->get('dibs.repository.order_payment');
-        $orderPayment = $orderPaymentRepository->findOrderPaymentByCartId($this->context->cart->id);
-        if ($orderPayment) {
-            $orderPayment->delete();
-        }
+        $orderPayment = $this->getOrderPayment();
 
-        if (Tools::isSubmit('paymentId')) {
-            $paymentId = Tools::getValue('paymentId');
-
-            /** @var \Invertus\DibsEasy\Action\PaymentGetAction $paymentGetAction */
-            $paymentGetAction = $this->module->get('dibs.action.payment_get');
-            $payment = $paymentGetAction->getPayment($paymentId);
-
-            $paymentAmountInCents = $payment->getOrderDetail()->getAmount();
-            $cartAmountInCents = (int) (string) ($this->context->cart->getOrderTotal() * 100);
-
-            $paymentCurrency = $payment->getOrderDetail()->getCurrency();
-            $cartCurrency = new Currency($this->context->cart->id_currency);
-
-            if ($paymentAmountInCents == $cartAmountInCents && $cartCurrency->iso_code == $paymentCurrency) {
-                // When payment ID is in query params we have to reload page to remove it.
-                // Because dibs iframe won't load when url contains payment ID.
-                $this->context->cookie->dibs_payment_id = $paymentId;
-                Tools::redirect($this->context->link->getModuleLink($this->module->name, 'checkout'));
-            }
-        }
-
-        if (isset($this->context->cookie->dibs_payment_id)) {
-            $paymentId = $this->context->cookie->dibs_payment_id;
-            unset($this->context->cookie->dibs_payment_id);
-
-            $orderPayment = new DibsOrderPayment();
-            $orderPayment->id_payment = $paymentId;
-            $orderPayment->id_cart = $this->context->cart->id;
-            $orderPayment->save();
-        } else {
-            /** @var \Invertus\DibsEasy\Action\PaymentCreateAction $paymentCreateAction */
-            $paymentCreateAction = $this->module->get('dibs.action.payment_create');
-            $orderPayment = $paymentCreateAction->createPayment($this->context->cart);
-
-            if (false === $orderPayment) {
-                $this->errors[] = $this->module->l('Failed to create payment in DIBS Easy. Please contact us for support.', 'checkout');
-                $this->redirectWithNotifications('order');
-            }
-
-            $paymentId = $orderPayment->id_payment;
-        }
-
-        $this->jsVariables['dibsCheckout']['paymentID'] = $paymentId;
+        $this->jsVariables['dibsCheckout']['paymentID'] = $orderPayment->id_payment;
     }
 
     /**
@@ -204,6 +157,78 @@ class DibsEasyCheckoutModuleFrontController extends ModuleFrontController
         parent::initContent();
 
         $this->setTemplate('module:dibseasy/views/templates/front/checkout.tpl');
+    }
+
+    /**
+     * Get DIBS payment information for order.
+     *
+     * @return DibsOrderPayment
+     */
+    protected function getOrderPayment()
+    {
+        /** @var \Invertus\DibsEasy\Repository\OrderPaymentRepository $orderPaymentRepository */
+        $orderPaymentRepository = $this->module->get('dibs.repository.order_payment');
+        $orderPayment = $orderPaymentRepository->findOrderPaymentByCartId($this->context->cart->id);
+        if ($orderPayment) {
+            $orderPayment->delete();
+        }
+
+        if (Tools::isSubmit('paymentId')) {
+            $paymentId = Tools::getValue('paymentId');
+
+            /** @var \Invertus\DibsEasy\Action\PaymentGetAction $paymentGetAction */
+            $paymentGetAction = $this->module->get('dibs.action.payment_get');
+            $payment = $paymentGetAction->getPayment($paymentId);
+
+            if (null === $payment) {
+                Tools::redirect($this->context->link->getModuleLink($this->module->name, 'checkout'));
+            }
+
+            $paymentAmountInCents = $payment->getOrderDetail()->getAmount();
+            $cartAmountInCents = (int) (string) ($this->context->cart->getOrderTotal() * 100);
+
+            $paymentCurrency = $payment->getOrderDetail()->getCurrency();
+            $cartCurrency = new Currency($this->context->cart->id_currency);
+
+            if ($paymentAmountInCents != $cartAmountInCents ||
+                $cartCurrency->iso_code != $paymentCurrency
+            ) {
+                // If payment details does not match cart details
+                // Then skip and redirect to checkout without payment id
+                // To create new payment with valid details
+                Tools::redirect($this->context->link->getModuleLink($this->module->name, 'checkout'));
+            }
+
+            $orderPayment = new DibsOrderPayment();
+            $orderPayment->id_payment = $paymentId;
+            $orderPayment->id_cart = $this->context->cart->id;
+
+            if (!$orderPayment->save()) {
+                PrestaShopLogger::addLog(
+                    'Failed to create DibsOrderPayment in PrestaShop',
+                    3,
+                    'FROM_QUERY_PARAM',
+                    'DibsOrderPayment',
+                    $paymentId,
+                    true
+                );
+                $this->errors[] = $this->module->l('Failed to create payment in DIBS Easy. Please contact us for support.', 'checkout');
+                $this->redirectWithNotifications('order');
+            }
+
+            return $orderPayment;
+        }
+
+        /** @var \Invertus\DibsEasy\Action\PaymentCreateAction $paymentCreateAction */
+        $paymentCreateAction = $this->module->get('dibs.action.payment_create');
+        $orderPayment = $paymentCreateAction->createPayment($this->context->cart);
+
+        if (false === $orderPayment) {
+            $this->errors[] = $this->module->l('Failed to create payment in DIBS Easy. Please contact us for support.', 'checkout');
+            $this->redirectWithNotifications('order');
+        }
+
+        return $orderPayment;
     }
 
     /**
