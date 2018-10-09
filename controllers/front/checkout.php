@@ -98,6 +98,10 @@ class DibsEasyCheckoutModuleFrontController extends ModuleFrontController
         $this->jsVariables['dibsCheckout']['language'] = $language;
         $this->jsVariables['dibsCheckout']['validationUrl'] = $validationUrl;
         $this->jsVariables['dibsCheckout']['checkoutUrl'] = $changeDeliveryOptionUrl;
+        $this->jsVariables['dibsCheckout']['addressUrl'] = $this->context->link->getModuleLink(
+            $this->module->name,
+            'address'
+        );
 
         $this->registerStylesheet('dibseasy-checkout-css', 'modules/dibseasy/views/css/checkout.css');
         $this->registerJavascript('dibseasy-remote-js', $checkoutJs, ['server' => 'remote']);
@@ -128,6 +132,13 @@ class DibsEasyCheckoutModuleFrontController extends ModuleFrontController
         $orderPayment = $this->getOrderPayment();
 
         $this->jsVariables['dibsCheckout']['paymentID'] = $orderPayment->id_payment;
+        $this->jsVariables['dibsCheckout']['refreshUrl'] = $this->context->link->getModuleLink(
+            $this->module->name,
+            'checkout',
+            [
+                'paymentId' => $orderPayment->id_payment,
+            ]
+        );
     }
 
     /**
@@ -190,13 +201,32 @@ class DibsEasyCheckoutModuleFrontController extends ModuleFrontController
             $paymentCurrency = $payment->getOrderDetail()->getCurrency();
             $cartCurrency = new Currency($this->context->cart->id_currency);
 
-            if ($paymentAmountInCents != $cartAmountInCents ||
-                $cartCurrency->iso_code != $paymentCurrency
-            ) {
-                // If payment details does not match cart details
+            if ($cartCurrency->iso_code != $paymentCurrency) {
+                // If payment currency has changed
                 // Then skip and redirect to checkout without payment id
                 // To create new payment with valid details
                 Tools::redirect($this->context->link->getModuleLink($this->module->name, 'checkout'));
+            }
+
+            if ($paymentAmountInCents != $cartAmountInCents) {
+                // If payment id is in url
+                // and cart amount does not equal payment amount
+                // then it means shipping cost has (probably) changed
+                // so we attempt to update payment items.
+
+                /** @var \Invertus\DibsEasy\Action\PaymentUpdateCartItemsAction $updateCartItemsAction */
+                $updateCartItemsAction = $this->module->get('dibs.action.payment_update_items');
+                $hasUpdated = $updateCartItemsAction->updatePaymentItems(
+                    $paymentId,
+                    $this->context->cart
+                );
+
+                if (!$hasUpdated) {
+                    // if update failed
+                    // then redirect to checkout without payment id
+                    // to initialize new payment
+                    Tools::redirect($this->context->link->getModuleLink($this->module->name, 'checkout'));
+                }
             }
 
             $orderPayment = new DibsOrderPayment();

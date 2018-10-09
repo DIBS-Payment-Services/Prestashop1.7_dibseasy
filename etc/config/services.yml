@@ -102,6 +102,12 @@ services:
         arguments:
              - '@dibs.service.payment'
 
+    dibs.action.payment_update_items:
+        class: 'Invertus\DibsEasy\Action\PaymentUpdateCartItemsAction'
+        arguments:
+            - '@dibs.module'
+            - '@dibs.service.payment'
+
     dibs.util.address_checksum:
         class: 'Invertus\DibsEasy\Util\AddressChecksum'
 
