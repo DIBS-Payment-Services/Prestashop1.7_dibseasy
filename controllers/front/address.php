@@ -29,9 +29,7 @@ class DibsEasyAddressModuleFrontController extends ModuleFrontController
     public function checkAccess()
     {
         if (!$this->isXmlHttpRequest()) {
-            $this->json([
-                'error' => true,
-            ]);
+            Tools::redirect('order');
         }
 
         // If guest checkout is enabled and customer is not logged in, then redirect to standard checkout
@@ -91,8 +89,8 @@ class DibsEasyAddressModuleFrontController extends ModuleFrontController
 
         // if delivery data is the same
         // then do nothing
-        if ($deliveryAddress->postcode == $postCode &&
-            $deliveryCountry->iso_code == $countryAlpha2Code
+        if ($deliveryAddress->postcode === $postCode &&
+            $deliveryCountry->iso_code === $countryAlpha2Code
         ) {
             $this->json([
                 'success' => true,
@@ -100,11 +98,11 @@ class DibsEasyAddressModuleFrontController extends ModuleFrontController
             ]);
         }
 
-        if ($deliveryAddress->postcode != $postCode) {
+        if ($deliveryAddress->postcode !== $postCode) {
             $deliveryAddress->postcode = $postCode;
         }
 
-        if ($deliveryCountry->iso_code != $countryAlpha2Code) {
+        if ($deliveryCountry->iso_code !== $countryAlpha2Code) {
             $countryId = Country::getByIso($countryAlpha2Code);
 
             $deliveryAddress->id_country = $countryId;

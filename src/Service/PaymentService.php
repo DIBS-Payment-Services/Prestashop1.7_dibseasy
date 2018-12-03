@@ -183,18 +183,7 @@ class PaymentService
 
         $response = $this->apiRequest->put($endpoint, $body);
 
-        if ($response->isSuccess()) {
-            $shippingSpecifiedNotificationUrl = sprintf(
-                'v1/payments/%s/shippingcostspecified',
-                $request->getPaymentId()
-            );
-
-            $response = $this->apiRequest->put($shippingSpecifiedNotificationUrl);
-
-            return $response->isSuccess();
-        }
-
-        return false;
+        return $response->isSuccess();
     }
 
     /**

@@ -117,18 +117,8 @@ class DibsEasyCheckoutModuleFrontController extends ModuleFrontController
         CartRule::autoRemoveFromCart($this->context);
         CartRule::autoAddToCart($this->context);
 
-        if (!$this->context->cart->id_address_delivery) {
-            $this->context->cart->id_address_delivery = $this->getDeliveryAddressId();
-            $this->context->cart->save();
-        }
-
-        if (!$this->context->cart->id_carrier) {
-            $idCarrierDefault = (int) Configuration::get('PS_CARRIER_DEFAULT');
-            $option = [$this->context->cart->id_address_delivery => $idCarrierDefault.','];
-
-            $this->context->cart->setDeliveryOption($option);
-            $this->context->cart->update();
-        }
+        $this->assignAddressToCart();
+        $this->assignCarrierToCart();
 
         $orderPayment = $this->getOrderPayment();
 
@@ -310,5 +300,77 @@ class DibsEasyCheckoutModuleFrontController extends ModuleFrontController
         }
 
         return (int) $idAddress;
+    }
+
+    /**
+     * Assigns carrier to cart, so it always exists
+     */
+    protected function assignCarrierToCart()
+    {
+        $carrier = new Carrier($this->context->cart->id_carrier);
+
+        if (Validate::isLoadedObject($carrier)) {
+            // if carrier is not deleted
+            // then it's okay to use it
+            if (!$carrier->deleted) {
+                return;
+            }
+
+            if ($carrier->active) {
+                // if carrier is deleted, lets try using updated carrier
+                $carrier = Carrier::getCarrierByReference($carrier->id_reference);
+
+                // if updated carrier exists
+                // then update cart data and use it
+                if (false !== $carrier) {
+                    $option = [$this->context->cart->id_address_delivery => $carrier->id.','];
+
+                    $this->context->cart->setDeliveryOption($option);
+                    $this->context->cart->update();
+
+                    return;
+                }
+            }
+        }
+
+        // in case carrier was deleted or not set yet
+        // let use first carrier available
+
+        $address = new Address($this->context->cart->id_address_delivery);
+        $deliveryOptions = $this->context->cart->getDeliveryOptionList(new Country($address->id_country));
+
+        if (isset($deliveryOptions[$address->id]) &&
+            is_array($deliveryOptions[$address->id])
+        ) {
+            reset($deliveryOptions[$address->id]);
+            $carrierIdWithComma = key($deliveryOptions[$address->id]);
+
+            $option = [$this->context->cart->id_address_delivery => $carrierIdWithComma];
+
+            $this->context->cart->setDeliveryOption($option);
+            $this->context->cart->update();
+
+            return;
+        }
+
+        // last but not least
+        // fallback to default carrier
+
+        $idCarrierDefault = (int) Configuration::get('PS_CARRIER_DEFAULT');
+        $option = [$this->context->cart->id_address_delivery => $idCarrierDefault.','];
+
+        $this->context->cart->setDeliveryOption($option);
+        $this->context->cart->update();
+    }
+
+    /**
+     * Assign customer's address to cart
+     */
+    private function assignAddressToCart()
+    {
+        if (!$this->context->cart->id_address_delivery) {
+            $this->context->cart->id_address_delivery = $this->getDeliveryAddressId();
+            $this->context->cart->save();
+        }
     }
 }
