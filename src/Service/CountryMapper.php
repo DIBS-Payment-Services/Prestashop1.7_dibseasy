@@ -35,6 +35,32 @@ class CountryMapper
         return $mappings[self::DEFAULT_COUNTRY];
     }
 
+    /**
+     * Get country ISO-3 code or null if it is not defined
+     *
+     * @param string $iso2Code
+     *
+     * @return string|null
+     */
+    public function getIso3CodeOrNull($iso2Code)
+    {
+        $iso2Code = strtoupper($iso2Code);
+        $mappings = $this->mappings();
+
+        $iso2Code = array_search($iso2Code, $mappings, true);
+
+        if ($iso2Code) {
+            return $iso2Code;
+        }
+
+        return null;
+    }
+
+    /**
+     * Defines list of supported DIBS Easy shipping countries
+     *
+     * @return array
+     */
     public function mappings()
     {
         return array(

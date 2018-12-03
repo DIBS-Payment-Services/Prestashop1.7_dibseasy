@@ -17,17 +17,20 @@
 namespace Invertus\DibsEasy\Action;
 
 use Cart;
+use Context;
+use Country;
 use Currency;
 use DibsOrderPayment;
 use Invertus\DibsEasy\Adapter\ConfigurationAdapter;
 use Invertus\DibsEasy\Adapter\LinkAdapter;
 use Invertus\DibsEasy\Payment\PaymentCreateRequest;
+use Invertus\DibsEasy\Service\CountryMapper;
 use Invertus\DibsEasy\Service\PaymentService;
 use Invertus\DibsEasy\ValueObject\Consumer;
 use Module;
 
 /**
- * Class PaymentCreateAction
+ * Class PaymentCreateAction defines list of supported dibs easy countries and mapping between ISO-2 and ISO-3 codes
  *
  * @package Invertus\DibsEasy\Action
  */
@@ -49,14 +52,14 @@ class PaymentCreateAction extends AbstractAction
     private $module;
 
     /**
-     * @var array
-     */
-    private $supportedCountries;
-
-    /**
      * @var ConfigurationAdapter
      */
     private $configuration;
+
+    /**
+     * @var CountryMapper
+     */
+    private $countryMapper;
 
     /**
      * PaymentCreateAction constructor.
@@ -65,20 +68,20 @@ class PaymentCreateAction extends AbstractAction
      * @param LinkAdapter $linkAdapter
      * @param Module $module
      * @param ConfigurationAdapter $configuration
-     * @param array $supportedCountries
+     * @param CountryMapper $countryMapper
      */
     public function __construct(
         PaymentService $paymentService,
         LinkAdapter $linkAdapter,
         Module $module,
         ConfigurationAdapter $configuration,
-        array $supportedCountries
+        CountryMapper $countryMapper
     ) {
         $this->paymentService = $paymentService;
         $this->linkAdapter = $linkAdapter;
         $this->module = $module;
-        $this->supportedCountries = $supportedCountries;
         $this->configuration = $configuration;
+        $this->countryMapper = $countryMapper;
     }
 
     /**
@@ -98,6 +101,8 @@ class PaymentCreateAction extends AbstractAction
         $request->setReference($cart->id);
         $request->setUrl($this->linkAdapter->getModuleLink('dibseasy', 'checkout'));
         $request->setTermsUrl($this->configuration->get('DIBS_TAC_URL'));
+
+        $this->addShippingCountryRestrictions($request);
 
         $this->addConsumerData($request);
 
@@ -163,5 +168,38 @@ class PaymentCreateAction extends AbstractAction
     protected function getModule()
     {
         return $this->module;
+    }
+
+    /**
+     * Adds shipping countries restrictions to payment creation request
+     *
+     * @param PaymentCreateRequest $request
+     */
+    private function addShippingCountryRestrictions(PaymentCreateRequest $request)
+    {
+        $context = Context::getContext();
+        $countries = Country::getCountriesByIdShop(
+            $context->shop->id,
+            $context->language->id
+        );
+
+        if (!is_array($countries)) {
+            return;
+        }
+
+        foreach ($countries as $shippingCountry) {
+            if (!$shippingCountry['active']) {
+                continue;
+            }
+
+            $countryIso3Code = $this->countryMapper->getIso3CodeOrNull($shippingCountry['iso_code']);
+
+            if (null === $countryIso3Code) {
+                // country is not supported by DIBS Easy
+                continue;
+            }
+
+            $request->addShippingCountry($countryIso3Code);
+        }
     }
 }
