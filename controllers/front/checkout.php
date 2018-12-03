@@ -14,6 +14,7 @@
  * International Registered Trademark & Property of INVERTUS, UAB
  */
 
+use Invertus\DibsEasy\Service\PriceToCentsConverter;
 use PrestaShop\PrestaShop\Adapter\Product\PriceFormatter;
 
 class DibsEasyCheckoutModuleFrontController extends ModuleFrontController
@@ -196,19 +197,19 @@ class DibsEasyCheckoutModuleFrontController extends ModuleFrontController
             }
 
             $paymentAmountInCents = $payment->getOrderDetail()->getAmount();
-            $cartAmountInCents = (int) (string) ($this->context->cart->getOrderTotal() * 100);
+            $cartAmountInCents = PriceToCentsConverter::convert($this->context->cart->getOrderTotal());
 
             $paymentCurrency = $payment->getOrderDetail()->getCurrency();
             $cartCurrency = new Currency($this->context->cart->id_currency);
 
-            if ($cartCurrency->iso_code != $paymentCurrency) {
+            if ($cartCurrency->iso_code !== $paymentCurrency) {
                 // If payment currency has changed
                 // Then skip and redirect to checkout without payment id
                 // To create new payment with valid details
                 Tools::redirect($this->context->link->getModuleLink($this->module->name, 'checkout'));
             }
 
-            if ($paymentAmountInCents != $cartAmountInCents) {
+            if ($paymentAmountInCents !== $cartAmountInCents) {
                 // If payment id is in url
                 // and cart amount does not equal payment amount
                 // then it means shipping cost has (probably) changed

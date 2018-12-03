@@ -89,6 +89,9 @@ class PaymentUpdateCartItemsRequest
             'items' => array_map(function (PaymentItem $item) {
                 return $item->toArray();
             }, $this->paymentItems),
+            'shipping' => [
+                'costSpecified' => true,
+            ],
         ];
     }
 }
