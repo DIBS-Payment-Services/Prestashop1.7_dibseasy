@@ -113,3 +113,8 @@ services:
 
     dibs.service.country_mapper:
         class: 'Invertus\DibsEasy\Service\CountryMapper'
+
+    dibs.service.default_shipping_country_provider:
+        class: 'Invertus\DibsEasy\Service\DefaultShippingCountryProvider'
+        arguments:
+            - '@dibs.service.country_mapper'
