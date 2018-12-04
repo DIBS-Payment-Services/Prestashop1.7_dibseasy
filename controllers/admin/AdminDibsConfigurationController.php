@@ -40,13 +40,6 @@ class AdminDibsConfigurationController extends ModuleAdminController
      */
     protected function initOptions()
     {
-        $availableCountries = $this->getAvailableCountries();
-
-        if (empty($availableCountries)) {
-            $this->warnings[] =
-                $this->l('DIBS Easy does not support any active country of your shop, thus module will not work');
-        }
-
         $this->fields_options = [
             'dibs_configuration' => [
                 'title' => $this->l('DIBS Easy Checkout configuration'),
@@ -114,14 +107,6 @@ class AdminDibsConfigurationController extends ModuleAdminController
                         'cast' => 'intval',
                         'class' => 'fixed-width-xxl',
                     ],
-                    'DIBS_DEFAULT_SHIPPING_COUNTRY' => [
-                        'title' => $this->l('Default shipping country'),
-                        'type' => 'select',
-                        'class' => 'fixed-width-xxl',
-                        'list' => $this->getAvailableCountries(),
-                        'identifier' => 'id',
-                        'desc' => $this->l('Shipping cost is calculated for selected country by default'),
-                    ],
                 ],
                 'submit' => [
                     'title' => $this->l('Save'),
@@ -183,50 +168,5 @@ class AdminDibsConfigurationController extends ModuleAdminController
                 'name' => $this->l('B2B & B2C (defaults to B2B)'),
             ],
         ];
-    }
-
-    /**
-     * Get countries that are supported by DIBS Easy and activated in PrestaShop
-     *
-     * @return array
-     */
-    private function getAvailableCountries()
-    {
-        $countries = Country::getCountriesByIdShop(
-            $this->context->shop->id,
-            $this->context->language->id
-        );
-        $activeCountries = [];
-
-        foreach ($countries as $country) {
-            if ($country['active']) {
-                $activeCountries[$country['id_country']] = $country['iso_code'];
-            }
-        }
-
-        if (empty($activeCountries)) {
-            return $activeCountries;
-        }
-
-        $supportedCountries = $this->module->get('dibs.service.country_mapper')->mappings();
-        $availableCountries = array_intersect($activeCountries, $supportedCountries);
-
-        if (empty($availableCountries)) {
-            return $activeCountries;
-        }
-
-        $formattedCountries = [];
-
-        foreach ($availableCountries as $countryId => $isoCode) {
-            $formattedCountries[] = [
-                'id' => $countryId,
-                'name' => Country::getNameById(
-                    $this->context->language->id,
-                    $countryId
-                ),
-            ];
-        }
-
-        return $formattedCountries;
     }
 }
