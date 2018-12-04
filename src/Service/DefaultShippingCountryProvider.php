@@ -81,4 +81,9 @@ class DefaultShippingCountryProvider
 
         return $formattedCountries;
     }
+
+    public function anyAvailableCountries()
+    {
+        return !empty($this->getAvailableCountries());
+    }
 }

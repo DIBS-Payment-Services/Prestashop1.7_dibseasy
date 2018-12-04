@@ -67,6 +67,12 @@ class DibsEasyCheckoutModuleFrontController extends ModuleFrontController
             Tools::redirect('index.php?controller=order&step=1');
         }
 
+        // if there are no supported countries
+        // then redirect to default checkout
+        if (!$this->module->get('dibs.service.default_shipping_country_provider')->anyAvailableCountries()) {
+            Tools::redirect('index.php?controller=order&step=1');
+        }
+
         return true;
     }
 

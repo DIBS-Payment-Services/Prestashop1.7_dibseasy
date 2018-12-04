@@ -98,6 +98,13 @@ class DibsEasyAddressModuleFrontController extends ModuleFrontController
             ]);
         }
 
+        // if cart had temporary shipping address assigned to it
+        // then we dont want to modify it
+        // and instead duplicate it and update it's data
+        if ($this->isOneOfDefaultShippingAddresses($deliveryAddress->id)) {
+            $deliveryAddress = $deliveryAddress->duplicateObject();
+        }
+
         if ($deliveryAddress->postcode !== $postCode) {
             $deliveryAddress->postcode = $postCode;
         }
@@ -110,6 +117,9 @@ class DibsEasyAddressModuleFrontController extends ModuleFrontController
 
         $deliveryAddress->save();
 
+        $this->context->cart->id_address_delivery = $deliveryAddress->id;
+        $this->context->cart->update();
+
         $this->json([
             'success' => true,
             'need_reload' => true,
@@ -119,5 +129,16 @@ class DibsEasyAddressModuleFrontController extends ModuleFrontController
     public function json(array $data)
     {
         die(json_encode($data));
+    }
+
+    private function isOneOfDefaultShippingAddresses($addressId)
+    {
+        $defaultShippingAddresses = [
+            (int) Configuration::get('DIBS_SWEEDEN_ADDRESS_ID'),
+            (int) Configuration::get('DIBS_NORWAY_ADDRESS_ID'),
+            (int) Configuration::get('DIBS_DENMARK_ADDRESS_ID'),
+        ];
+
+        return in_array((int) $addressId, $defaultShippingAddresses);
     }
 }
