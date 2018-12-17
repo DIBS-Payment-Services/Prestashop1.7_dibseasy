@@ -44,7 +44,7 @@ class CountryMapper
      */
     public function getIso3CodeOrNull($iso2Code)
     {
-        $iso2Code = strtoupper($iso2Code);
+        $iso2Code = \Tools::strtoupper($iso2Code);
         $mappings = $this->mappings();
 
         $iso2Code = array_search($iso2Code, $mappings, true);

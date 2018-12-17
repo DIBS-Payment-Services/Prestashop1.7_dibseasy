@@ -239,7 +239,8 @@ class DibsEasyCheckoutModuleFrontController extends ModuleFrontController
                     $paymentId,
                     true
                 );
-                $this->errors[] = $this->module->l('Failed to create payment in DIBS Easy. Please contact us for support.', 'checkout');
+                $this->errors[] = $this
+                    ->module->l('Failed to create payment in DIBS Easy. Please contact us for support.', 'checkout');
                 $this->redirectWithNotifications('order');
             }
 
@@ -251,7 +252,8 @@ class DibsEasyCheckoutModuleFrontController extends ModuleFrontController
         $orderPayment = $paymentCreateAction->createPayment($this->context->cart);
 
         if (false === $orderPayment) {
-            $this->errors[] = $this->module->l('Failed to create payment in DIBS Easy. Please contact us for support.', 'checkout');
+            $this->errors[] =
+                $this->module->l('Failed to create payment in DIBS Easy. Please contact us for support.', 'checkout');
             $this->redirectWithNotifications('order');
         }
 
