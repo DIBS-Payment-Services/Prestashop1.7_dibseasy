@@ -95,15 +95,26 @@ services:
             - '@dibs.adapter.link'
             - '@dibs.module'
             - '@dibs.adapter.configuration'
-            - '%supported_countries%'
+            - '@dibs.service.country_mapper'
 
     dibs.action.payment_get:
         class: 'Invertus\DibsEasy\Action\PaymentGetAction'
         arguments:
              - '@dibs.service.payment'
 
+    dibs.action.payment_update_items:
+        class: 'Invertus\DibsEasy\Action\PaymentUpdateCartItemsAction'
+        arguments:
+            - '@dibs.module'
+            - '@dibs.service.payment'
+
     dibs.util.address_checksum:
         class: 'Invertus\DibsEasy\Util\AddressChecksum'
 
     dibs.service.country_mapper:
         class: 'Invertus\DibsEasy\Service\CountryMapper'
+
+    dibs.service.default_shipping_country_provider:
+        class: 'Invertus\DibsEasy\Service\DefaultShippingCountryProvider'
+        arguments:
+            - '@dibs.service.country_mapper'

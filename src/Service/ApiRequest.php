@@ -100,4 +100,28 @@ class ApiRequest
 
         return $apiResponse;
     }
+
+    /**
+     * @param string $url
+     * @param array|string $params
+     *
+     * @return ApiResponse
+     */
+    public function put($url, $params = [])
+    {
+        $apiResponse = new ApiResponse();
+
+        try {
+            $response = $this->client->put($url, ['body' => $params]);
+
+            $body = $response->getBody()->__toString();
+            $body = $this->toolsAdapter->jsonDecode($body);
+
+            $apiResponse->setStatusCode($response->getStatusCode());
+            $apiResponse->setBody(is_array($body) ? $body : []);
+        } catch (Exception $e) {
+        }
+
+        return $apiResponse;
+    }
 }

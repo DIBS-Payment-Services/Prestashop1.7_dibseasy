@@ -363,7 +363,8 @@ class DibsEasy extends PaymentModule
         $countryMapper = $this->get('dibs.service.country_mapper');
         $countryIso = $countryMapper->getIso2Code($shippingAddress->getCountry());
 
-        $deliveryAddress = new Address();
+        $saveAddress = true;
+        $deliveryAddress = new Address($this->context->cart->id_address_delivery);
         $deliveryAddress->alias = $this->l('DIBS EASY Address');
         $deliveryAddress->address1 = $shippingAddress->getAddressLine1();
         $deliveryAddress->address2 = $shippingAddress->getAddressLine2();
@@ -388,11 +389,12 @@ class DibsEasy extends PaymentModule
 
             if ($addressChecksum == $deliveryAddressChecksum) {
                 $deliveryAddress = $address;
+                $saveAddress = false;
                 break;
             }
         }
 
-        if (!Validate::isLoadedObject($deliveryAddress)) {
+        if ($saveAddress || !Validate::isLoadedObject($deliveryAddress)) {
             if (!$deliveryAddress->save()) {
                 return false;
             }
@@ -401,8 +403,8 @@ class DibsEasy extends PaymentModule
         $order->id_address_delivery = $deliveryAddress->id;
         $order->id_address_invoice = $deliveryAddress->id;
 
-        $this->context->cart->id_address_delivery = $deliveryAddress->id;
-        $this->context->cart->id_address_invoice = $deliveryAddress->id;
+        $this->context->cart->id_address_delivery = 0;
+        $this->context->cart->id_address_invoice = 0;
 
         return $this->context->cart->save() && $order->save();
     }

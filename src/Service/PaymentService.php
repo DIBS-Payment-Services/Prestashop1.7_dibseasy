@@ -25,6 +25,7 @@ use Invertus\DibsEasy\Payment\PaymentChargeRequest;
 use Invertus\DibsEasy\Payment\PaymentCreateRequest;
 use Invertus\DibsEasy\Payment\PaymentGetRequest;
 use Invertus\DibsEasy\Payment\PaymentRefundRequest;
+use Invertus\DibsEasy\Payment\PaymentUpdateCartItemsRequest;
 use Invertus\DibsEasy\Repository\OrderPaymentRepository;
 use Invertus\DibsEasy\Result\Address;
 use Invertus\DibsEasy\Result\CardDetails;
@@ -164,6 +165,23 @@ class PaymentService
         $endpoint = sprintf('/v1/charges/%s/refunds', $paymentRefundRequest->getChargeId());
 
         $response = $this->apiRequest->post($endpoint, $body);
+
+        return $response->isSuccess();
+    }
+
+    /**
+     * @param PaymentUpdateCartItemsRequest $request
+     *
+     * @return bool
+     */
+    public function updateItems(PaymentUpdateCartItemsRequest $request)
+    {
+        $params = $request->toArray();
+
+        $body = $this->toolsAdapter->jsonEncode($params);
+        $endpoint = sprintf('/v1/payments/%s/orderitems', $request->getPaymentId());
+
+        $response = $this->apiRequest->put($endpoint, $body);
 
         return $response->isSuccess();
     }

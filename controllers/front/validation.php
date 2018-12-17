@@ -16,6 +16,9 @@
 
 use Invertus\DibsEasy\Result\Payment;
 
+/**
+ * Validates DIBS Easy payment and creates order
+ */
 class DibsEasyValidationModuleFrontController extends ModuleFrontController
 {
     const FILENAME = 'validation';
@@ -73,7 +76,8 @@ class DibsEasyValidationModuleFrontController extends ModuleFrontController
         // Before creating order let's make some validations
         // First let's check if paid amount and currency is the same as it is in cart
         $payment = $this->validateCartPayment($orderPayment->id_payment);
-        if (false == $payment) {
+
+        if (false === $payment) {
             $this->cancelCartPayment();
             $this->errors[] = $this->module->l('Payment validation has failed. Payment was canceled.', self::FILENAME);
             $this->redirectWithNotifications($checkoutUrl);
@@ -241,7 +245,7 @@ class DibsEasyValidationModuleFrontController extends ModuleFrontController
             $this->errors = array_merge($this->errors, $errors);
             return false;
         }
-        
+
         $customer->save();
 
         $this->sendConfirmationEmail($customer, $newPassword);
@@ -256,10 +260,10 @@ class DibsEasyValidationModuleFrontController extends ModuleFrontController
                 'Payment was canceled, because customer account could not be saved.',
                 self::FILENAME
             );
-            
+
             return false;
         }
-        
+
         return true;
     }
 
