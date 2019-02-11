@@ -37,7 +37,7 @@ class DibsEasy extends PaymentModule
         $this->name = 'dibseasy';
         $this->author = 'Invertus';
         $this->tab = 'payments_gateways';
-        $this->version = '1.1.0';
+        $this->version = '1.1.1';
         $this->controllers = ['validation', 'checkout'];
         $this->compatibility = ['min' => '1.7.1.0', 'max' => _PS_VERSION_];
         $this->module_key = '7aa447652d62fa94766ded6234e74266';
