@@ -1,6 +1,6 @@
-# PrestaShop 1.7 Module for DIBS Easy Checkout #
+# PrestaShop 1.7 Module for Easy Checkout #
 
-This is PrestaShop 1.7 module for DIBS Easy Checkout, for more information see the following:
+This is PrestaShop 1.7 module for Easy Checkout, for more information see the following:
 for integration documentation please go to: https://tech.dibspayment.com/nodeaddpage/prestashop17easy
 If you have any issues please contact us [here](http://www.dibspayment.com/customer_support).
 
@@ -25,17 +25,17 @@ Installation
 
 Configuration
 
--Navigate to → Modules → Select your DIBS Easy Checkout module → Configure.
+-Navigate to → Modules → Select your Easy Checkout module → Configure.
 
 -Merchant ID - Add your merchant ID, found in your Easy portal.
 
--Live Secret key – Your live secret key received from DIBS.
+-Live Secret key – Your live secret key received from Nets.
 
--Live Checkout key – Your live checkout key received from DIBS.
+-Live Checkout key – Your live checkout key received from Nets.
 
--Test Secret key – your secret key for test purchases received from DIBS.
+-Test Secret key – your secret key for test purchases received from Nets.
 
--Test Checkout key – Your checkout key for test purchases received from DIBS.
+-Test Checkout key – Your checkout key for test purchases received from Nets.
 
 -Test mode – Tick the checkbox if you make purchases using the test credentials.
  
